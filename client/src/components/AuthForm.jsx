@@ -4,7 +4,7 @@ import vector from "../assets/circleVector.svg";
 import { useAppContext } from "../AppContext";
 import axios from "axios";
 import toast from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 
 function AuthForm() {
@@ -172,7 +172,11 @@ function AuthForm() {
                 </span>
               )}
             </div>
-
+                {state==="login" && (
+            <div className="w-full items-center justify-end flex lg:justify-center">
+           <Link to="/forget" className="text-center text-sm font-[Outfit] text-white font-medium mt-3 hover:text-blue-500 hover:underline transition-colors duration-300">Forget Password?</Link>
+          </div>
+        )}
             <button
               type="submit"
               className="px-5 py-2  outline-none rounded-lg text-white bg-blue-600 cursor-pointer"
@@ -180,6 +184,7 @@ function AuthForm() {
               {state === "register" ? "Get Started" : "Login"}
             </button>
           </form>
+          
           {state === "register" ? (
             <p className="text-center text-sm font-[Outfit] text-white font-medium mt-3">
               Already have an account ?{" "}

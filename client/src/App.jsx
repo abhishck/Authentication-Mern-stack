@@ -8,6 +8,8 @@ import Navbar from './components/Navbar'
 import Header from './components/Header'
 import {Toaster} from "react-hot-toast"
 import VerifyEmail from './components/VerifyEmail'
+import ForgetPassword from './components/ForgetPassword'
+import SetPassword from './components/SetPassword'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -19,6 +21,8 @@ function App() {
         <Route path='/' element={<Header/>}/>
         <Route path='login' element={<AuthForm/>}/>
         <Route path='/verify-email' element={<VerifyEmail/>}/>
+        <Route path='/forget' element={<ForgetPassword/>}/>
+        <Route path='/update-password' element={<SetPassword/>}/>
       </Routes>
     </>
   )

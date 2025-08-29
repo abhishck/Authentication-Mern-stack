@@ -2,20 +2,28 @@ import React, { useEffect, useState } from "react";
 import background from "../assets/background.jpg";
 import { useAppContext } from "../AppContext";
 import axios from "axios";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import {HashLoader} from "react-spinners"
+import { HashLoader } from "react-spinners";
 
 function VerifyEmail() {
-  const [timer, setTimer] = useState(5);
+  // const [timer, setTimer] = useState(5);
   const context = useAppContext();
   const navigate = useNavigate();
   const [otp, setOtp] = useState("");
-  const [isLoading,setIsLoading]=useState(true)
+  const location = useLocation();
+  const [isLoading, setIsLoading] = useState(true);
+  const [state, setState] = useState(
+    `${location.state?.from}` || "verifyemail"
+  );
+
+  console.log(location);
 
   useEffect(() => {
-      alreadyVerifiedHandler()
-    sendEmail();
+    if (state === "verifyemail") {
+      alreadyVerifiedHandler();
+      sendEmail();
+    }
   }, []);
 
   const sendEmail = async () => {
@@ -34,71 +42,91 @@ function VerifyEmail() {
       }
     } catch (error) {
       console.log(error.response.data.message);
-      toast.error(error.response.data.message);
+      // toast.error(error.response.data.message);
     }
   };
 
-  const alreadyVerifiedHandler=()=>{
-    
-      const isVerified=context.user.user.isAccountverified;
-      if(isVerified){
-        toast.error("Account Already verified!!")
-        setTimeout(() => {
-          navigate("/");
-        }, 1000);
-        setIsLoading(false)
-      }
+  const alreadyVerifiedHandler = () => {
+    const isVerified = context.user.user.isAccountverified;
+    if (isVerified) {
+      toast.error("Account Already verified!!");
+
+      navigate("/");
+
+      setIsLoading(false);
+    } else {
+      setIsLoading(false);
     }
+  };
   console.log(otp);
 
   const verifyOtp = async (e) => {
-        e.preventDefault();
-    try {
-      const { data } = await axios.post(
-        `${context.backendUrl}/api/auth/verify-otp`,
-        { otp },
-        { withCredentials: true }
-      );
-      if (data.success) {
-        toast.success(data.message);
-        setTimeout(() => {
-          navigate("/");
-        }, 1500);
-      }else{
-        toast.error(data.message)
-      }
-    } catch (error) {
+    e.preventDefault();
+    if (state === "verifyemail") {
+      try {
+        const { data } = await axios.post(
+          `${context.backendUrl}/api/auth/verify-otp`,
+          { otp },
+          { withCredentials: true }
+        );
+        if (data.success) {
+          toast.success(data.message);
+          setTimeout(() => {
+            navigate("/");
+          }, 1500);
+        } else {
+          toast.error(data.message);
+        }
+      } catch (error) {
         console.log(error.response.data.message);
-      toast.error(error.response.data.message);
+        toast.error(error.response.data.message);
+      }
+    } else {
+      try {
+        const { data } = await axios.post(
+          `${context.backendUrl}/api/auth/verify-forget-otp`,
+          { otp },
+          { withCredentials: true }
+        );
+        if (data.success) {
+          toast.success(data.message);
+          setTimeout(() => {
+            navigate("/update-password");
+          }, 1500);
+        } else {
+          toast.error(data.message);
+        }
+      } catch (error) {
+        console.log(error.response.data.message);
+        toast.error(error.response.data.message);
+      }
     }
   };
 
-  const resendOtp=async()=>{
-     try {
-      const { data } = await axios.get(
-        `${context.backendUrl}/api/auth/send-otp`,
-        { withCredentials: true }
-      );
-      if (data.success) {
-        toast.success(data.message);
-      } else {
-        toast.error(data.message);
-        setTimeout(() => {
-          navigate("/");
-        }, 1500);
-      }
-    } catch (error) {
-      console.log(error.response.data.message);
-      toast.error(error.response.data.message);
-    }
-  }
 
-  return (
-    <>
-    {isLoading ? (
-        <div className="w-full min-h-screen bg-white"><HashLoader size={80} /> </div>
-    ): (
-        <div
+const resendOtp = async () => {
+  try {
+    const { data } = await axios.get(
+      `${context.backendUrl}/api/auth/send-otp`,
+      { withCredentials: true }
+    );
+    if (data.success) {
+      toast.success(data.message);
+    } else {
+      toast.error(data.message);
+      setTimeout(() => {
+        navigate("/");
+      }, 1500);
+    }
+  } catch (error) {
+    console.log(error.response.data.message);
+    toast.error(error.response.data.message);
+  }
+};
+
+return (
+  <>
+    <div
       className="w-full h-screen flex items-center justify-center bg-cover bg-center"
       style={{ backgroundImage: `url(${background})` }}
     >
@@ -110,7 +138,10 @@ function VerifyEmail() {
           <p className="text-xl font-medium text-white/60 font-[Outfit] text-center">
             Enter the Otp sent to your email
           </p>
-          <form onSubmit={verifyOtp} className="flex  flex-col items-center justify-center gap-6 w-full mt-2">
+          <form
+            onSubmit={verifyOtp}
+            className="flex  flex-col items-center justify-center gap-6 w-full mt-2"
+          >
             <div className="flex items-center justify-center space-x-4 w-full">
               <input
                 type="text"
@@ -153,26 +184,26 @@ function VerifyEmail() {
             <div className="flex items-center gap-5 w-full justify-center mt-2">
               <button
                 type="submit"
-            
                 className="px-5 py-2  outline-none rounded-lg text-white bg-blue-600 cursor-pointer"
               >
                 Submit
               </button>
-              <button
-                type="submit"
-                onClick={()=>resendOtp()}
-                className="px-5 py-2  outline-none rounded-lg text-white bg-red-600 cursor-pointer"
-              >
-                Resend
-              </button>
+              {state === "verifyemail" && (
+                <button
+                  type="submit"
+                  onClick={resendOtp}
+                  className="px-5 py-2  outline-none rounded-lg text-white bg-red-600 cursor-pointer"
+                >
+                  Resend
+                </button>
+              )}
             </div>
           </form>
         </div>
       </div>
     </div>
-    )}
-    </>
-  );
+  </>
+);
 }
 
 export default VerifyEmail;
